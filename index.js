@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { API_KEY, BOT_NAME, MAX_SESSIONS, PORT, ROOT_DIR, SESSION_ROOT, keyIsConfigured, safeId, sessions, sha, state } from './lib/config.js';
 import { clearTimers, destroySession, restoreSessions, startSession } from './lib/session.js';
 import { startCallbot } from './lib/callbot.js';
+import { mountWeb } from './lib/web.js';
 
 const app = express();
 app.set('trust proxy', 1); // Render sits behind a proxy; needed for correct client IPs
@@ -93,6 +94,8 @@ app.delete('/api/session/:id', apiLimiter, authRequired, (req, res) => {
   if (r && r.status !== 'connected' && !r.state?.creds?.registered) destroySession(id); // never touches a linked session
   res.json({ ok: true });
 });
+
+mountWeb(app); // /settings and /admin
 
 app.get('/health', (_req, res) => res.json({ ok: true, bot: BOT_NAME, activeSessions: sessions.size, storage: state.mongoCol ? 'mongodb' : 'files' }));
 
