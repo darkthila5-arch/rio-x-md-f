@@ -23,6 +23,7 @@
     if (!r.ok) { const e = new Error(j.error || 'Something went wrong. Try again.'); e.status = r.status; throw e; }
     return j;
   }
+  const flash = (el) => { el.classList.remove('saved'); void el.offsetWidth; el.classList.add('saved'); setTimeout(() => el.classList.remove('saved'), 1200); };
   const busy = (btn, fn) => async (...a) => { btn.disabled = true; try { return await fn(...a); } finally { btn.disabled = false; } };
 
   const SCHEMA = [
@@ -50,8 +51,9 @@
   function renderSettings(root, values, save) {
     root.replaceChildren();
     const send = async (patch) => { const res = await save(patch); if (res?.settings) Object.assign(values, res.settings); return res; };
-    for (const group of SCHEMA) {
+    SCHEMA.forEach((group, gi) => {
       const card = h('section', { class: 'card flat' }, h('h2', { style: 'margin-top:14px' }, group.title));
+      card.style.setProperty('--i', gi);
       for (const it of group.items) {
         const id = `f-${it.k}`;
         const txt = h('span', { class: 'txt' }, h('b', {}, it.label), it.hint && h('small', {}, it.hint));
@@ -60,21 +62,23 @@
           box.checked = !!values[it.k];
           box.addEventListener('change', async () => {
             box.disabled = true;
-            try { await send({ [it.k]: box.checked }); toast('Saved'); }
+            try { await send({ [it.k]: box.checked }); toast('Saved'); flash(row); }
             catch (e) { box.checked = !box.checked; toast(e.message, true); }
             finally { box.disabled = false; }
           });
-          card.append(h('label', { class: 'row', for: id }, txt, box));
+          const row = h('label', { class: 'row', for: id }, txt, box);
+          card.append(row);
         } else if (it.type === 'select') {
           const sel = h('select', { id, 'aria-label': it.label }, it.options.map(([v, t]) => h('option', { value: v }, t)));
           sel.value = values[it.k];
           sel.addEventListener('change', async () => {
             const prev = values[it.k]; sel.disabled = true;
-            try { await send({ [it.k]: sel.value }); toast('Saved'); }
+            try { await send({ [it.k]: sel.value }); toast('Saved'); flash(row); }
             catch (e) { sel.value = prev; toast(e.message, true); }
             finally { sel.disabled = false; }
           });
-          card.append(h('div', { class: 'stack' }, txt, h('div', { style: 'margin-top:8px' }, sel)));
+          const row = h('div', { class: 'stack' }, txt, h('div', { style: 'margin-top:8px' }, sel));
+          card.append(row);
         } else {
           const field = it.type === 'textarea' ? h('textarea', { id, maxlength: 500, 'aria-label': it.label }) : h('input', { id, type: 'text', maxlength: 200, placeholder: it.placeholder || '', 'aria-label': it.label });
           field.value = values[it.k] || '';
@@ -82,13 +86,14 @@
           const form = h('form', {}, field, btn);
           form.addEventListener('submit', busy(btn, async (ev) => {
             ev.preventDefault();
-            try { await send({ [it.k]: field.value }); toast('Saved'); } catch (e) { toast(e.message, true); }
+            try { await send({ [it.k]: field.value }); toast('Saved'); flash(row); } catch (e) { toast(e.message, true); }
           }));
-          card.append(h('div', { class: 'stack' }, txt, form));
+          const row = h('div', { class: 'stack' }, txt, form);
+          card.append(row);
         }
       }
       root.append(card);
-    }
+    });
   }
 
   async function login(url, fields, after) {
@@ -96,7 +101,7 @@
     form.addEventListener('submit', busy(btn, async (ev) => {
       ev.preventDefault(); err.textContent = '';
       try { await api('POST', url, Object.fromEntries(fields.map((f) => [f, form.elements[f].value]))); form.elements.password.value = ''; await after(); }
-      catch (e) { err.textContent = e.message; }
+      catch (e) { err.textContent = e.message; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); }
     }));
   }
   const uptime = (s) => { const d = Math.floor(s / 86400), hr = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60); return d ? `${d}d ${hr}h` : hr ? `${hr}h ${m}m` : `${m}m`; };
@@ -129,12 +134,24 @@
   /* ---------- /admin ---------- */
   async function adminPage() {
     let current = null;
-    const stat = (label, value) => h('div', { class: 'stat' }, h('b', {}, String(value)), h('small', {}, label));
+    let first = true;
+    const stat = (label, value, i, count) => {
+      const num = h('span', {}, count == null ? String(value) : '0');
+      const box = h('div', { class: `stat${first ? ' enter' : ''}` }, h('b', {}, num, count == null ? '' : String(value).slice(String(count).length)), h('small', {}, label));
+      box.style.setProperty('--i', i);
+      if (count != null) {
+        if (!first || count === 0) num.textContent = String(count);
+        else { const t0 = performance.now(); const tick = (t) => { const k = Math.min(1, (t - t0 - 250) / 800); num.textContent = String(Math.round(Math.max(0, k) * count)); if (k < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+      }
+      return box;
+    };
     const refresh = async () => {
       try {
         const o = await api('GET', '/api/admin/overview');
         $('#login').hidden = true; $('#panel').hidden = false; $('#logout').hidden = false;
-        $('#stats').replaceChildren(stat('Linked numbers', `${o.sessions.filter((s) => s.linked).length} of ${o.maxSessions}`), stat('Online now', o.connected), stat('Storage', o.storage), stat('Call service', o.callService ? 'Ready' : 'Not running'), stat('Uptime', uptime(o.uptimeSeconds)));
+        const linked = o.sessions.filter((s) => s.linked).length;
+        $('#stats').replaceChildren(stat('Linked numbers', `${linked} of ${o.maxSessions}`, 0, linked), stat('Online now', o.connected, 1, o.connected), stat('Storage', o.storage, 2), stat('Call service', o.callService ? 'Ready' : 'Not running', 3), stat('Uptime', uptime(o.uptimeSeconds), 4));
+        first = false;
         const ul = $('#sessions'); ul.replaceChildren();
         if (!o.sessions.length) ul.append(h('li', { class: 'note' }, 'No numbers are linked yet.'));
         for (const s of o.sessions) {
