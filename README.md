@@ -12,6 +12,8 @@ Multi-session WhatsApp bot (Baileys) with a modern pairing website (pair code or
 | Downloaders | TikTok, Facebook, Pinterest, YouTube song / video. |
 | Status tools | Auto view, auto react (your own emojis), auto save, view-once recovery. |
 | Owner tools | public / private mode, broadcast, block, join, leave, bio, profile picture, restart. |
+| Web settings | After linking, the bot sends a password to your own chat. Log in at `/settings` with your number to switch features on or off. |
+| Admin site | `/admin` shows linked numbers, lets the host change their settings, restart, reset passwords or delete a session. |
 | Calls | Reject calls, reject + auto reply with a saved audio / video, or **really answer** and stream a saved audio / video into the call. |
 
 ## Run locally
@@ -35,6 +37,7 @@ Without a disk, files are wiped on every redeploy. With `MONGO_URL` the WhatsApp
 ## Project layout and adding commands
 ```
 index.js            pairing website + API, startup / shutdown
+views/              /settings and /admin pages (script and styles in public/web.js, public/web.css)
 lib/                shared code (config, storage, session, router, menu, downloader, calls, status ...)
 commands/           one file per group of commands, loaded automatically
 ```
@@ -63,6 +66,9 @@ Optional fields: `owner: true` (owner only), `hidden: true` (silent for everyone
 | `MAX_DL_MB` | Download size limit (default 90). |
 | `YTDLP_PATH`, `YTDLP_COOKIES` | yt-dlp location / YouTube cookies when YouTube asks for a bot check. |
 | `CALLBOT_DIR`, `CALLBOT_PORT` | Optional, call service data folder / localhost port (8099). |
+| `PUBLIC_URL` | Public address of the site (for example `https://your-app.onrender.com`). Used in the web password message. Render's own `RENDER_EXTERNAL_URL` is used when this is empty. |
+| `WEB_SECRET` | Long random text used to sign web logins. Set it, otherwise everyone is logged out on each restart. |
+| `ADMIN_USER`, `ADMIN_PASSWORD` | Login for `/admin` (user defaults to `admin`). The admin site stays off unless the password has 10+ characters. |
 | `TIMEZONE` | Greeting and clock time zone (default `Asia/Colombo`). |
 
 ## Commands
@@ -118,6 +124,19 @@ Owner only, per linked account. The owner's own number and `OWNER_NUMBER` are ne
 - If the service is not installed or not linked, `.callreject` / `.autoanswer` still work.
 - Local build: `cd callbot && go mod tidy && go build -o ../bin/callbot .` (Go 1.24+ and ffmpeg needed), then `npm start`. Tests: `cd callbot && go test ./...`.
 - Limits: meowcaller is a young reverse-engineered library; its own docs mark outgoing video as not validated, so video may not show on every phone. WhatsApp can change its protocol at any time.
+
+## Web settings page (`/settings`) and admin site (`/admin`)
+**For every linked user**
+- When a number is linked, the bot sends a 12 character password to that number's own chat, with the link to `/settings`.
+- Log in with the number and password. You can switch on or off: public / private mode, status view / react / save, the reaction emojis, view-once copies, call reject, auto answer, call loop and the reject message. Real call answering can be turned off here, but turning it on needs `.callstream on` in WhatsApp (one-time device link).
+- **Account** section: send yourself a new password (ends this login) or unlink your number.
+- `.webpass` (owner) sends a new password to your own chat. Numbers linked before this update have no password yet: send `.webpass` once.
+- Only a salted hash of the password is stored. 5 wrong attempts block a number or an IP for 10 minutes. Logins are signed, `HttpOnly`, `SameSite=Strict` cookies that last 12 hours.
+
+**For the host (`/admin`)**
+- Set `ADMIN_PASSWORD` (10+ characters), optionally `ADMIN_USER`, and `WEB_SECRET`. Admin logins last 4 hours.
+- Overview (linked numbers, online count, storage, call service, uptime), a list of numbers with masked digits, per-number settings, restart, send a new web password, unlink and delete, and a log of recent admin actions (kept in memory, cleared on restart).
+- WhatsApp auth keys and session files are never shown.
 
 ## What happens on restart
 Paired sessions are restored automatically (from MongoDB or `SESSION_DIR`). Unpaired attempts expire after 5 minutes. Logged-out sessions are deleted.
