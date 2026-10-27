@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050505">
+<meta name="robots" content="noindex">
+<title>Your bot settings • RIO X MD</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="/web.css">
+</head>
+<body data-page="settings">
+<header class="top"><div class="wrap">
+  <a class="brand" href="/"><img src="/ghost.png" width="26" height="32" alt="">RIO X MD</a>
+  <span class="who" id="who" hidden></span>
+</div></header>
+<main class="wrap">
+  <section id="login">
+    <h1>Your bot settings</h1>
+    <p class="lead">Log in with the number you linked and the password the bot sent to your own WhatsApp chat.</p>
+    <form id="loginForm" class="card" autocomplete="on">
+      <label class="field" for="phone">WhatsApp number</label>
+      <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="username" placeholder="Country code and number, digits only" required>
+      <label class="field" for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <p class="error" id="loginError" role="alert"></p>
+      <div class="actions"><button class="btn primary" type="submit">Log in</button></div>
+    </form>
+    <p class="note">No password yet? Open WhatsApp and send <b>.webpass</b> in your own chat. Not linked yet? <a href="/">Link your number</a>.</p>
+  </section>
+  <section id="panel" hidden>
+    <h1>Settings</h1>
+    <p class="lead" id="status"></p>
+    <div id="groups"></div>
+    <section class="card">
+      <h2>Account</h2>
+      <p class="note">A new password is sent to your own WhatsApp chat and ends this login. Unlinking logs the bot out of your WhatsApp and removes its saved settings.</p>
+      <div class="actions">
+        <button class="btn" id="newPass" type="button">Send me a new password</button>
+        <button class="btn" id="logout" type="button">Log out</button>
+        <button class="btn danger" id="unlink" type="button">Unlink my number</button>
+      </div>
+    </section>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/web.js"></script>
+</body>
+</html>

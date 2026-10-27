@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050505">
+<meta name="robots" content="noindex">
+<title>Admin • RIO X MD</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="/web.css">
+</head>
+<body data-page="admin">
+<header class="top"><div class="wrap wide">
+  <a class="brand" href="/admin"><img src="/ghost.png" width="26" height="32" alt="">RIO X MD admin</a>
+  <button class="btn" id="logout" type="button" hidden>Log out</button>
+</div></header>
+<main class="wrap wide">
+  <section id="login" class="wrap">
+    <h1>Admin login</h1>
+    <form id="loginForm" class="card">
+      <label class="field" for="user">Username</label>
+      <input id="user" name="user" type="text" autocomplete="username" required>
+      <label class="field" for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <p class="error" id="loginError" role="alert"></p>
+      <div class="actions"><button class="btn primary" type="submit">Log in</button></div>
+    </form>
+  </section>
+  <section id="panel" hidden>
+    <h1>Overview</h1>
+    <div class="stats" id="stats"></div>
+    <section class="card">
+      <h2>Linked numbers</h2>
+      <p class="note">Select a number to change its settings or manage it.</p>
+      <ul class="list" id="sessions"></ul>
+    </section>
+    <section id="detail" hidden>
+      <div class="card">
+        <h3 id="detailTitle"></h3>
+        <div class="actions">
+          <button class="btn" id="restart" type="button">Restart bot</button>
+          <button class="btn" id="resetPass" type="button">Send new web password</button>
+          <button class="btn danger" id="remove" type="button">Unlink and delete</button>
+        </div>
+      </div>
+      <div id="groups"></div>
+    </section>
+    <section class="card">
+      <h2>Recent admin activity</h2>
+      <ul class="log" id="audit"></ul>
+    </section>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/web.js"></script>
+</body>
+</html>
