@@ -1,4 +1,4 @@
-:root{color-scheme:dark;--paper:#050505;--card:#0e0e0e;--tab:#1a1a1a;--line:#2a2a2a;--ink:#fafafa;--muted:#a6a6a6;--accent:#25d366;--accent-2:#7dffb0;--on-ink:#03140a;--error:#ff8a80}
+:root{color-scheme:dark;--ease:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);--paper:#050505;--card:#0e0e0e;--tab:#1a1a1a;--line:#2a2a2a;--ink:#fafafa;--muted:#a6a6a6;--accent:#25d366;--accent-2:#7dffb0;--on-ink:#03140a;--error:#ff8a80}
 *{box-sizing:border-box}
 body{margin:0;min-height:100dvh;background:radial-gradient(900px 400px at 50% -140px,color-mix(in srgb,var(--accent) 20%,transparent),transparent 70%) no-repeat,var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
 .wrap{width:100%;max-width:680px;margin:0 auto;padding:0 max(18px,env(safe-area-inset-right)) 48px max(18px,env(safe-area-inset-left))}
@@ -54,4 +54,61 @@ textarea{resize:vertical;min-height:84px}
 #toast.bad{border-color:var(--error)}
 [hidden]{display:none!important}
 @media (max-width:520px){.stack form{flex-direction:column}.stack form .btn{width:100%}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- motion ---------- */
+main{position:relative;z-index:1}
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.aurora i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 20%,transparent),transparent 62%);will-change:transform}
+.aurora i:nth-child(1){top:-38vmax;left:-22vmax;animation:drift1 26s ease-in-out infinite alternate}
+.aurora i:nth-child(2){top:30vh;right:-40vmax;opacity:.55;animation:drift2 32s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate3d(14vmax,10vmax,0) scale(1.15)}}
+@keyframes drift2{to{transform:translate3d(-16vmax,-8vmax,0) scale(.9)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+@keyframes saved{0%{background:color-mix(in srgb,var(--accent) 18%,transparent)}100%{background:transparent}}
+@keyframes spinin{from{transform:rotate(-90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+/* one page-load sequence: headings, then cards, in order */
+#login>*,#panel>*,#detail>*{animation:rise .7s var(--ease) both}
+#login>:nth-child(2),#panel>:nth-child(2){animation-delay:.07s}
+#login>:nth-child(3),#panel>:nth-child(3){animation-delay:.14s}
+#login>:nth-child(4),#panel>:nth-child(4){animation-delay:.21s}
+#panel>:nth-child(5){animation-delay:.28s}
+#panel>#groups,#detail>#groups{animation:none}
+#groups>.card,.stat.enter{animation:rise .6s var(--ease) both;animation-delay:calc(var(--i,0)*80ms + .15s)}
+.brand img{animation:float 5s ease-in-out infinite}
+.top{animation:fade .6s var(--ease) both}
+
+/* controls that answer a touch */
+.card{transition:border-color .25s var(--ease)}
+.card.flat:hover,.card:focus-within{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.btn{transition:transform .18s var(--ease),border-color .2s,background .2s,box-shadow .25s}
+.btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--accent)}
+.btn.primary:hover:not(:disabled){box-shadow:0 8px 24px -8px color-mix(in srgb,var(--accent) 80%,transparent)}
+.btn.danger:hover:not(:disabled){border-color:var(--error);background:color-mix(in srgb,var(--error) 10%,var(--tab))}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled::after{content:"";width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+input[type=text],input[type=password],input[type=tel],select,textarea{transition:border-color .2s,box-shadow .25s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.sw{transition:background .25s,border-color .25s,box-shadow .25s}
+.sw::after{transition:transform .3s var(--spring),background .2s}
+.sw:checked{box-shadow:0 0 14px -2px color-mix(in srgb,var(--accent) 70%,transparent)}
+.sw:active::after{width:26px}
+.sw:checked:active::after{transform:translateX(14px)}
+.row,.stack{transition:background .3s}
+.saved{animation:saved 1.1s ease-out}
+.saved .txt b::after{content:" \2713";color:var(--accent-2);display:inline-block;animation:spinin .4s var(--spring) both}
+.shake{animation:shake .4s}
+.error:not(:empty){animation:fade .3s}
+.pill.on::before{content:"";display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-out infinite}
+.list li button{transition:background .2s,padding .25s var(--ease),color .2s}
+.list li button:hover{background:color-mix(in srgb,var(--tab) 70%,transparent);padding-left:12px;padding-right:12px;border-radius:10px}
+.list li button[aria-current=true]{box-shadow:inset 3px 0 0 var(--accent);padding-left:14px}
+.stat{transition:border-color .25s,transform .25s var(--ease)}
+.stat:hover{border-color:var(--accent);transform:translateY(-2px)}
+#toast{transition:opacity .25s var(--ease),transform .35s var(--spring)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
